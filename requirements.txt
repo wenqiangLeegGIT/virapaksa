@@ -1,1 +1,10 @@
-
+python=3.8.0
+gdal=3.0.2
+numpy
+pandas
+hdf5
+# sentinelhub
+cartopy
+scikit-learn
+scikit-image
+setuptools
