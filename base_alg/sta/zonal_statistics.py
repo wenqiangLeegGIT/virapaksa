@@ -112,7 +112,7 @@ class ZonalStatistics:
         layer = inds.GetLayer(0)
         for i in range(layer.GetFeatureCount()):
             feat = layer.GetFeature(i)
-            if self.zoneField == 'fid':
+            if self.zoneField.lower() == 'fid':
                 uq.append(feat.GetFID())
             else:
                 uq.append(feat.GetField(self.zoneField))
@@ -162,7 +162,7 @@ class ZonalStatistics:
         lyr = shpds.GetLayer()
         for idx in range(lyr.GetFeatureCount()):
             feat = lyr.GetFeature(idx)
-            if self.zoneField == "fid":
+            if self.zoneField.lower() == "fid":
                 key = feat.GetFID()
             else:
                 key = feat.GetField(self.zoneField)
@@ -317,7 +317,7 @@ class ZonalStatistics:
         lyr = shpds.GetLayer()
         result = {}
         for feature in lyr:
-            if self.zoneField == "fid":
+            if self.zoneField.lower() == "fid":
                 field = feature.GetFID()
             else:
                 field = feature.GetField(self.zoneField)
