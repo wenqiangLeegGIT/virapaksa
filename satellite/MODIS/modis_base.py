@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-import os
 import re
-from pathlib import Path
 
 import numpy as np
-import os
-from base_alg.typedefs import *
-from base_alg.utils.raster_tool import RasterTool
-from osgeo import gdal
+from typedefs import *
+from osgeo import gdal,osr
 import gdalnumeric
 
 class MODISBaseAlg:
@@ -16,11 +12,13 @@ class MODISBaseAlg:
     def _reproject(
             self,
             hdf_file   :PathLike,
-            data_keys  :Union[ListPathLike,PathLike],
-            dstSRS     :str,dstRes:Real,
+            data_keys  :Union[ListStr,str],
+            dstSRS     :Union[int,str],
+            dstRes     :Real,
             dstNoData  :Union[Real,None]=None,
             dstDataType:int = gdal.GDT_Float32,
             resampleAlg:int = gdal.GRA_NearestNeighbour,
+            calibration:bool = False,
             to_single  :bool = False
     ):
         hdfds = gdal.Open(str(hdf_file))
@@ -34,7 +32,20 @@ class MODISBaseAlg:
         elif isinstance(data_keys,list):
             _subs = data_keys
         else:
-            raise Exception("'sub_datasets must be 'list' of PathLike or PathLike. ")
+            raise Exception("'sub_datasets' type must be ListStr or str. ")
+
+        srs = osr.SpatialReference()
+        if isinstance(dstSRS,str):
+            _ogr_err = srs.ImportFromWkt(dstSRS)
+            if not _ogr_err:
+                raise Exception(f"Invalid WKT. {dstSRS}")
+        elif isinstance(dstSRS,int):
+            _ogr_err = srs.ImportFromEPSG(dstSRS)
+            if not _ogr_err:
+                raise Exception(f"Invalid EPSG code. {dstSRS}")
+        else:
+            raise Exception("dstSRS only support 'EPSG code' and 'wkt'.")
+        del srs
 
         key_datasets = {}
         for sub in subdatasets:
@@ -47,14 +58,15 @@ class MODISBaseAlg:
         outfiles = []
         for key,ds in key_datasets.items():
             out = root.with_suffix(f".{key}.tif")
-            ds = self._calibaration(ds,output_type=dstDataType,dst_nodata=dstNoData)
+            if calibration:
+                ds = self._calibaration(ds,output_type=dstDataType,dst_nodata=dstNoData)
             gdal.Warp(str(out),ds,dstSRS=dstSRS,xRes=dstRes,yRes=dstRes,resampleAlg=resampleAlg,
                           dstNodata=dstNoData,multithread=True)
             outfiles.append(str(out))
 
         if to_single:
             out = Path(hdf_file).with_suffix(".tif")
-            RasterTool.layer_stacking(outfiles,str(out),data_type=dstDataType)
+            RasterTool.layer_stack(outfiles,str(out),data_type=dstDataType)
             for i in outfiles:
                 os.remove(i)
             return str(out)
@@ -63,7 +75,7 @@ class MODISBaseAlg:
 
 
     def _calibaration(self,ds,output_type,dst_nodata):
-        ds = gdal.Open(ds)  # not support for gdal.GA_Update
+        ds = gdal.Open(ds)  # gdal.Open(hdf_type) not support 'gdal.GA_Update' mode
         try:
             metadata = ds.GetMetadata()
             scale = float(metadata['scale_factor'])
@@ -133,8 +145,10 @@ if __name__ == '__main__':
     t = r"I:\project\Tongliao\modis\demo\xlh_modis_250M_soildrought.temp.tif"
     tt = r"I:\project\Tongliao\modis\demo\xlh_modis_250M_soildrought.tif"
     shp = r"I:\project\Tongliao\数据\辽河流域\Xiliaohe_150000_boundary.shp"
-    RasterTool.merge_layers(base,t,'MIN')
-    gdal.Warp(tt,t,cutlineDSName=shp,cropToCutline=True)
+    # RasterTool.merge_layers(base,t,'MIN')
+    # gdal.Warp(tt,t,cutlineDSName=shp,cropToCutline=True)
+    ds = gdal.Open(r"H:\HyperRecons\S2B_MSIL2A_20220308T030549_N9999_R075_T49RGP_20220325T025721.tif")
+    print()
 
 
 

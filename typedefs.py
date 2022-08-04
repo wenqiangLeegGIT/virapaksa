@@ -2,9 +2,8 @@
 # -*- coding: UTF-8 -*-
 import os
 from pathlib import Path
-from typing import TypeVar,List,Tuple,Dict,Union
+from typing import TypeVar,List,Tuple,Dict,Union,Optional
 
-import gdal
 
 Real = TypeVar('Real',float,int)
 ListInt = List[int]

@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 import shutil
 
-from base_alg.typedefs import *
+from typedefs import *
 import os, math,tempfile
 from collections import defaultdict
 import warnings
@@ -92,7 +92,6 @@ class ZonalStatistics:
         self.noDataValue = band.GetNoDataValue() if self.noDataValue is None else self.noDataValue
 
         if self.statisticType == 'ALL' or "AREA" in self.statisticType:
-
             scale = {'m2':1,'km2':1e-6,'mu':1/666.7,'ha':1e-4}
             geos = ds.GetGeoTransform()
             proj = ds.GetProjectionRef()
